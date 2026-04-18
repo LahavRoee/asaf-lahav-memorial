@@ -142,39 +142,121 @@ body {
   padding: 2rem 1rem 8rem;
 }
 
-/* ═══ ADD CTA ═══ */
-.add-cta {
+/* ═══ QUICK UPLOAD ═══ */
+.quick-upload {
   text-align: center;
   margin-bottom: 2.5rem;
-}
-.add-cta-btn {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  background: linear-gradient(135deg, var(--gold-dim), rgba(201,164,85,0.06));
-  border: 2px dashed var(--gold);
-  border-radius: 20px;
-  padding: 1.5rem 3rem;
+  gap: 0.75rem;
+}
+
+/* Big main button */
+.quick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 420px;
+  padding: 1.3rem 2rem;
+  background: linear-gradient(135deg, var(--gold), #b8923e);
+  border: none;
+  border-radius: 60px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.3s;
-  color: var(--text);
+  transition: all 0.25s;
+  box-shadow: 0 6px 28px rgba(201,164,85,0.4);
+  position: relative;
+  overflow: hidden;
 }
-.add-cta-btn:hover {
-  background: linear-gradient(135deg, rgba(201,164,85,0.2), rgba(201,164,85,0.1));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(201,164,85,0.2);
+.quick-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 40px rgba(201,164,85,0.55);
 }
-.add-cta-icon { font-size: 2rem; }
-.add-cta-text {
+.quick-btn:active {
+  transform: translateY(0);
+}
+.quick-btn input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 200px; /* ensures full coverage on mobile */
+}
+.quick-btn-icon {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #0c0c17;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.quick-btn-text {
   font-size: 1.15rem;
   font-weight: 700;
+  color: #0c0c17;
+  letter-spacing: -0.01em;
+}
+
+/* Secondary row */
+.quick-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+.quick-small-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.quick-small-btn:hover {
+  border-color: var(--gold);
+  background: var(--gold-dim);
   color: var(--gold-light);
 }
-.add-cta-sub {
-  font-size: 0.8rem;
-  color: var(--muted);
+
+/* WhatsApp button */
+.quick-whatsapp {
+  background: #1a3a2a;
+  border-color: #25D366;
+  color: #25D366;
+}
+.quick-whatsapp:hover {
+  background: #25D366;
+  color: #fff;
+  border-color: #25D366;
+}
+.wa-icon {
+  display: flex;
+  align-items: center;
+}
+.wa-icon svg { vertical-align: middle; }
+
+/* Mini modal (for quick name after file) */
+.modal-mini {
+  max-width: 400px;
+  padding: 1.25rem;
 }
 
 /* ═══ TABS ═══ */

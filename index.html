@@ -46,13 +46,22 @@
 <!-- MAIN -->
 <main class="main-wrap" id="main">
 
-    <!-- Add Memory CTA -->
-    <div class="add-cta" id="addCta">
-        <button class="add-cta-btn" id="openSubmitBtn">
-            <span class="add-cta-icon">&#x1F499;</span>
-            <span class="add-cta-text">שתפו זיכרון מאסי</span>
-            <span class="add-cta-sub">תמונה, סיפור, סרטון, הקלטה או קישור</span>
-        </button>
+    <!-- Quick Upload - 2 clicks -->
+    <div class="quick-upload" id="quickUpload">
+        <label class="quick-btn" id="quickFileBtn" tabindex="0">
+            <span class="quick-btn-icon">+</span>
+            <span class="quick-btn-text">הוסיפו תמונה או סרטון</span>
+            <input type="file" id="quickFileInput" accept="image/*,video/*" capture="environment" />
+        </label>
+        <div class="quick-row">
+            <button class="quick-small-btn" id="openSubmitBtn">&#x270D;&#xFE0F; סיפור או קישור</button>
+            <a class="quick-small-btn quick-whatsapp" id="whatsappBtn" target="_blank" rel="noopener">
+                <span class="wa-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                </span>
+                שלחו בוואטסאפ
+            </a>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -81,63 +90,49 @@
     <div class="lightbox-content" id="lightboxContent"></div>
 </div>
 
-<!-- SUBMIT MODAL -->
+<!-- QUICK NAME MODAL (appears after file selected) -->
+<div class="backdrop" id="quickNameBackdrop">
+    <div class="modal modal-mini">
+        <div class="file-preview" id="quickPreview" style="display:flex"></div>
+        <div class="form-group" style="margin-top:1rem">
+            <input type="text" id="quickName" placeholder="השם שלכם" autofocus />
+        </div>
+        <div class="form-group">
+            <input type="text" id="quickCaption" placeholder="תיאור קצר (אופציונלי)" />
+        </div>
+        <div class="modal-actions">
+            <button class="btn-main" id="quickSubmitBtn">&#x1F499; שלחו</button>
+            <button class="btn-sec" id="quickCancelBtn">ביטול</button>
+        </div>
+        <p class="modal-note">כל תוכן יועבר לאישור לפני פרסום</p>
+    </div>
+</div>
+
+<!-- SUBMIT MODAL (for stories / links) -->
 <div class="backdrop" id="submitBackdrop">
     <div class="modal" id="submitModal">
-        <h2>&#x1F499; שתפו זיכרון מאסי</h2>
-
-        <!-- Upload zone - always visible, prominent -->
-        <div class="form-group">
-            <label>העלו תמונה או סרטון</label>
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-buttons">
-                    <label class="upload-btn upload-btn-photo" tabindex="0">
-                        <span class="upload-btn-icon">&#x1F4F8;</span>
-                        <span>תמונה</span>
-                        <input type="file" id="fileInputPhoto" accept="image/*" capture="environment" />
-                    </label>
-                    <label class="upload-btn upload-btn-video" tabindex="0">
-                        <span class="upload-btn-icon">&#x1F3AC;</span>
-                        <span>סרטון</span>
-                        <input type="file" id="fileInputVideo" accept="video/*" capture="environment" />
-                    </label>
-                    <label class="upload-btn upload-btn-audio" tabindex="0">
-                        <span class="upload-btn-icon">&#x1F399;&#xFE0F;</span>
-                        <span>הקלטה</span>
-                        <input type="file" id="fileInputAudio" accept="audio/*" />
-                    </label>
-                </div>
-                <div class="upload-drop" id="fileDrop">
-                    <span class="file-drop-text">&#x1F4CB; או גררו לכאן / הדביקו (Ctrl+V) תמונה</span>
-                </div>
-            </div>
-            <div class="file-preview" id="filePreview" style="display:none"></div>
-        </div>
+        <h2>&#x270D;&#xFE0F; שתפו סיפור או קישור</h2>
 
         <div class="form-group">
-            <label>שמכם (יופיע לצד הזיכרון)</label>
+            <label>שמכם</label>
             <input type="text" id="subName" placeholder="שם מלא" />
         </div>
 
         <div class="form-group" id="textGroup">
-            <label>סיפור / זיכרון / תיאור (אופציונלי)</label>
+            <label>הסיפור / הזיכרון שלכם</label>
             <textarea id="subText" placeholder="ספרו זיכרון, רגע, משפט שמרגש..."></textarea>
         </div>
 
         <div class="form-group" id="linkGroup">
             <label>או הדביקו קישור</label>
-            <input type="url" id="subLink" placeholder="קישור ל-YouTube / אינסטגרם / פייסבוק / תמונה..." />
-            <div class="hint" id="linkHint">אפשר גם קישור לפוסט, סרטון, תמונה באינטרנט</div>
+            <input type="url" id="subLink" placeholder="YouTube / אינסטגרם / פייסבוק / כל קישור..." />
         </div>
 
         <div class="modal-actions">
-            <button class="btn-main" id="submitBtn">שלחו לאישור &#x1F499;</button>
+            <button class="btn-main" id="submitBtn">&#x1F499; שלחו לאישור</button>
             <button class="btn-sec" id="cancelSubmitBtn">ביטול</button>
         </div>
-
-        <p class="modal-note">
-            כל תוכן יועבר לאישור לפני פרסום. תודה שזוכרים.
-        </p>
+        <p class="modal-note">כל תוכן יועבר לאישור לפני פרסום</p>
     </div>
 </div>
 
