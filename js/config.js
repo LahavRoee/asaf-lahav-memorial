@@ -6,8 +6,8 @@
 
 const CONFIG = {
   // Supabase
-  SUPABASE_URL: '',   // e.g. 'https://xxxx.supabase.co'
-  SUPABASE_ANON: '',  // e.g. 'eyJ...'
+  SUPABASE_URL: 'https://cggdhyelrczehwildjhu.supabase.co',
+  SUPABASE_ANON: 'sb_publishable_GNDvakmQIPn9KAeOj7oJAA_kaSKpEQI',
 
   // Cloudflare R2 public bucket URL
   R2_PUBLIC_URL: '',  // e.g. 'https://pub-xxxx.r2.dev'
