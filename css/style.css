@@ -99,6 +99,24 @@ body {
   margin-bottom: 2.5rem;
 }
 
+/* ═══ BIRTHDAY COUNTDOWN ═══ */
+.birthday-countdown {
+  margin-bottom: 2rem;
+  padding: 0.8rem 2rem;
+  background: var(--gold-dim);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 1.1rem;
+  color: var(--gold-light);
+  letter-spacing: 0.02em;
+}
+.birthday-countdown .countdown-days {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--gold);
+}
+
 .scroll-down {
   position: absolute;
   bottom: 1.5rem;
@@ -196,15 +214,80 @@ body {
   color: var(--gold-light);
   border-color: var(--gold);
 }
-.hero-wa-btn {
-  color: #25D366;
-  border-color: rgba(37,211,102,0.3);
+/* ═══ VOICE RECORDER ═══ */
+.hero-voice-btn {
+  color: #e07050;
+  border-color: rgba(224,112,80,0.3);
 }
-.hero-wa-btn:hover {
-  background: #25D366;
-  color: #fff;
+.hero-voice-btn:hover {
+  background: rgba(224,112,80,0.15);
+  color: #f09070;
+  border-color: rgba(224,112,80,0.6);
 }
-.hero-wa-btn svg { vertical-align: middle; }
+.voice-recorder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+.voice-rec-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(224,112,80,0.1);
+  border: 2px solid rgba(224,112,80,0.3);
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  justify-content: center;
+}
+.voice-rec-btn:hover {
+  background: rgba(224,112,80,0.2);
+  border-color: rgba(224,112,80,0.6);
+  transform: scale(1.05);
+}
+.voice-rec-icon { font-size: 2rem; }
+.voice-rec-label { font-size: 0.7rem; color: var(--muted); }
+.voice-recording-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.voice-pulse {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #e07050;
+  animation: voicePulse 1s ease-in-out infinite;
+}
+@keyframes voicePulse {
+  0%,100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+.voice-timer {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e07050;
+  font-variant-numeric: tabular-nums;
+}
+.voice-stop-btn {
+  background: rgba(224,112,80,0.15);
+  border: 1px solid rgba(224,112,80,0.4);
+  color: #e07050;
+  border-radius: 30px;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.voice-stop-btn:hover { background: rgba(224,112,80,0.25); }
+.voice-preview { width: 100%; text-align: center; }
+.voice-preview audio { border-radius: 8px; }
 
 /* ═══ MAIN ═══ */
 .main-wrap {

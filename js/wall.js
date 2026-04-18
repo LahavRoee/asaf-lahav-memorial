@@ -23,6 +23,7 @@ const Wall = (() => {
   async function init() {
     DB.init();
     initStars();
+    initBirthdayCountdown();
     bindEvents();
     await loadMemories();
   }
@@ -43,6 +44,30 @@ const Wall = (() => {
         --max:${0.3 + Math.random() * 0.5};
       `;
       container.appendChild(star);
+    }
+  }
+
+  // ── Birthday countdown ──
+  function initBirthdayCountdown() {
+    const el = document.getElementById('birthdayCountdown');
+    if (!el) return;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    let birthday = new Date(year, 4, 19); // May 19 (month is 0-indexed)
+
+    // If birthday already passed this year, count to next year
+    if (today > birthday) {
+      birthday = new Date(year + 1, 4, 19);
+    }
+
+    const diffMs = birthday - today;
+    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (days === 0) {
+      el.textContent = 'היום יום ההולדת של אסי \u2764';
+    } else {
+      el.innerHTML = `<span class="countdown-days">${days}</span> ימים ליום ההולדת של אסי`;
     }
   }
 

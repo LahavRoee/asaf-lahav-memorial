@@ -53,6 +53,29 @@ const DB = (() => {
     return [...SEED_DATA, ...approved];
   }
 
+  // ═══ PUBLISH DIRECT (no approval) ═══
+
+  async function publishDirect(item) {
+    if (supabase) {
+      const { error } = await supabase.from('memories').insert([{
+        type: item.type,
+        author: item.author,
+        text: item.text || null,
+        media_url: item.media_url || null,
+        video_url: item.video_url || null,
+        link_data: item.link_data || null,
+        size_hint: item.size_hint || null,
+      }]);
+      if (error) { console.error('publishDirect error:', error); return false; }
+      return true;
+    }
+    // Local fallback
+    const approved = localGet('approved', []);
+    approved.push({ ...item, id: 'direct-' + Date.now(), created_at: new Date().toISOString() });
+    localSet('approved', approved);
+    return true;
+  }
+
   // ═══ PENDING (submissions) ═══
 
   async function submitPending(item) {
@@ -93,7 +116,7 @@ const DB = (() => {
     return localGet('pending', []);
   }
 
-  async function approvePending(id) {
+  async function approvePending(id, sizeHint) {
     if (supabase) {
       // Get the pending item
       const { data: item, error: fetchErr } = await supabase
@@ -108,6 +131,7 @@ const DB = (() => {
         media_url: item.media_url,
         video_url: item.video_url,
         link_data: item.link_data,
+        size_hint: sizeHint || null,
       }]);
       if (insertErr) { console.error('approve insert error:', insertErr); return false; }
 
@@ -120,6 +144,7 @@ const DB = (() => {
     const idx = pending.findIndex(p => p.id === id);
     if (idx === -1) return false;
     const item = pending.splice(idx, 1)[0];
+    if (sizeHint) item.size_hint = sizeHint;
     const approved = localGet('approved', []);
     approved.push(item);
     localSet('pending', pending);
@@ -306,6 +331,7 @@ const DB = (() => {
   return {
     init,
     fetchMemories,
+    publishDirect,
     submitPending,
     fetchPending,
     approvePending,

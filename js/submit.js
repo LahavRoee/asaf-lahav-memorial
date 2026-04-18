@@ -4,29 +4,62 @@
 // Submit — Ultra-simple 2-click upload
 // 1. Click big button → pick photo/video
 // 2. Type name → send
-// Also: story/link modal, WhatsApp, paste
+// Also: story modal, voice recording, paste
 // ═══════════════════════════════════════════
 
 const Submit = (() => {
   let selectedFile = null;
 
-  // WhatsApp number for receiving memories
-  const WHATSAPP_NUMBER = '972501234567'; // ← change to real number
-  const WHATSAPP_MSG = encodeURIComponent('היי, אני רוצה לשתף זיכרון מאסי להב ז״ל.\nהשם שלי: \nהנה התמונה/סרטון:');
+  // Voice recording state
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recordingTimer = null;
+  let recordingSeconds = 0;
+  let recordedBlob = null;
 
   function init() {
     bindEvents();
-    setupWhatsApp();
+  }
+
+  const MAX_FILE_MB = 50;
+  const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
+
+  // Track uploaded file hashes to detect duplicates
+  let uploadedHashes = new Set();
+
+  async function fileHash(file) {
+    const buffer = await file.arrayBuffer();
+    const hash = await crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function validateFile(file) {
+    if (file.size > MAX_FILE_BYTES) {
+      showToast(`הקובץ גדול מדי (${(file.size / 1024 / 1024).toFixed(1)}MB). מקסימום ${MAX_FILE_MB}MB`);
+      return false;
+    }
+    return true;
   }
 
   function bindEvents() {
-    // ── Quick file upload (big button) — supports multiple ──
+    // ── Quick file upload (big button) ──
     const quickInput = document.getElementById('quickFileInput');
     if (quickInput) {
-      quickInput.addEventListener('change', (e) => {
+      quickInput.addEventListener('change', async (e) => {
         if (e.target.files.length) {
-          // Take first file (we upload one at a time for simplicity)
-          selectedFile = e.target.files[0];
+          const file = e.target.files[0];
+          if (!validateFile(file)) { quickInput.value = ''; return; }
+
+          // Duplicate check
+          const hash = await fileHash(file);
+          if (uploadedHashes.has(hash)) {
+            showToast('הקובץ הזה כבר הועלה לאתר');
+            quickInput.value = '';
+            return;
+          }
+
+          selectedFile = file;
+          selectedFile._hash = hash;
           openQuickName();
         }
       });
@@ -44,7 +77,6 @@ const Submit = (() => {
       if (e.target === quickBackdrop) closeQuickName();
     });
 
-    // Enter key in quick name
     const quickName = document.getElementById('quickName');
     if (quickName) quickName.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') handleQuickSubmit();
@@ -65,19 +97,36 @@ const Submit = (() => {
       if (e.target === backdrop) closeStoryModal();
     });
 
+    // ── Voice recording ──
+    const voiceBtn = document.getElementById('voiceRecordBtn');
+    if (voiceBtn) voiceBtn.addEventListener('click', openVoiceModal);
+
+    const voiceStart = document.getElementById('voiceStartBtn');
+    if (voiceStart) voiceStart.addEventListener('click', startRecording);
+
+    const voiceStop = document.getElementById('voiceStopBtn');
+    if (voiceStop) voiceStop.addEventListener('click', stopRecording);
+
+    const voiceRetry = document.getElementById('voiceRetryBtn');
+    if (voiceRetry) voiceRetry.addEventListener('click', retryRecording);
+
+    const voiceSubmit = document.getElementById('voiceSubmitBtn');
+    if (voiceSubmit) voiceSubmit.addEventListener('click', handleVoiceSubmit);
+
+    const voiceCancel = document.getElementById('voiceCancelBtn');
+    if (voiceCancel) voiceCancel.addEventListener('click', closeVoiceModal);
+
+    const voiceBackdrop = document.getElementById('voiceBackdrop');
+    if (voiceBackdrop) voiceBackdrop.addEventListener('click', (e) => {
+      if (e.target === voiceBackdrop) closeVoiceModal();
+    });
+
     // ── Paste anywhere (Ctrl+V) ──
     document.addEventListener('paste', handlePaste);
 
     // ── Admin button ──
     const adminBtn = document.getElementById('adminToggle');
     if (adminBtn) adminBtn.addEventListener('click', openAdmin);
-  }
-
-  function setupWhatsApp() {
-    const btn = document.getElementById('whatsappBtn');
-    if (btn) {
-      btn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
-    }
   }
 
   // ═══ QUICK UPLOAD FLOW (2 clicks) ═══
@@ -154,14 +203,15 @@ const Submit = (() => {
       link_data: null,
     };
 
-    const ok = await DB.submitPending(item);
+    const ok = await DB.publishDirect(item);
     btn.disabled = false;
     btn.textContent = '\u{1F499} שלחו';
 
     if (ok) {
+      if (selectedFile && selectedFile._hash) uploadedHashes.add(selectedFile._hash);
       closeQuickName();
-      showToast('תודה! הזיכרון ממתין לאישור \u{1F499}');
-      updateAdminDot();
+      showToast('תודה! הזיכרון פורסם \u{1F499}');
+      Wall.loadMemories();
     } else {
       showToast('שגיאה בשליחה');
     }
@@ -169,7 +219,7 @@ const Submit = (() => {
 
   // ═══ PASTE (Ctrl+V anywhere) ═══
 
-  function handlePaste(e) {
+  async function handlePaste(e) {
     const items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
 
@@ -179,12 +229,163 @@ const Submit = (() => {
         e.preventDefault();
         const file = item.getAsFile();
         if (file) {
+          if (!validateFile(file)) return;
           const ext = item.type.split('/')[1] || 'png';
           selectedFile = new File([file], 'pasted.' + ext, { type: file.type });
+          const hash = await fileHash(selectedFile);
+          if (uploadedHashes.has(hash)) {
+            showToast('הקובץ הזה כבר הועלה לאתר');
+            return;
+          }
+          selectedFile._hash = hash;
           openQuickName();
         }
         return;
       }
+    }
+  }
+
+  // ═══ VOICE RECORDING ═══
+
+  function openVoiceModal() {
+    resetVoiceState();
+    document.getElementById('voiceBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeVoiceModal() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    clearInterval(recordingTimer);
+    document.getElementById('voiceBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+    resetVoiceState();
+  }
+
+  function resetVoiceState() {
+    mediaRecorder = null;
+    audioChunks = [];
+    recordedBlob = null;
+    recordingSeconds = 0;
+    clearInterval(recordingTimer);
+
+    const startBtn = document.getElementById('voiceStartBtn');
+    const recState = document.getElementById('voiceRecordingState');
+    const preview = document.getElementById('voicePreview');
+    const nameInput = document.getElementById('voiceName');
+
+    if (startBtn) startBtn.style.display = '';
+    if (recState) recState.style.display = 'none';
+    if (preview) preview.style.display = 'none';
+    if (nameInput) nameInput.value = '';
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+        const playback = document.getElementById('voicePlayback');
+        if (playback) {
+          playback.src = URL.createObjectURL(recordedBlob);
+        }
+
+        document.getElementById('voiceRecordingState').style.display = 'none';
+        document.getElementById('voicePreview').style.display = 'block';
+        clearInterval(recordingTimer);
+      };
+
+      mediaRecorder.start();
+
+      // UI: show recording state
+      document.getElementById('voiceStartBtn').style.display = 'none';
+      document.getElementById('voiceRecordingState').style.display = '';
+      document.getElementById('voicePreview').style.display = 'none';
+
+      // Timer
+      recordingSeconds = 0;
+      updateTimerDisplay();
+      recordingTimer = setInterval(() => {
+        recordingSeconds++;
+        updateTimerDisplay();
+        // Auto-stop at 5 minutes
+        if (recordingSeconds >= 300) stopRecording();
+      }, 1000);
+
+    } catch (err) {
+      showToast('לא ניתן לגשת למיקרופון. אנא אשרו גישה.');
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+  }
+
+  function retryRecording() {
+    recordedBlob = null;
+    document.getElementById('voicePreview').style.display = 'none';
+    document.getElementById('voiceStartBtn').style.display = '';
+  }
+
+  function updateTimerDisplay() {
+    const el = document.getElementById('voiceTimer');
+    if (!el) return;
+    const m = Math.floor(recordingSeconds / 60);
+    const s = recordingSeconds % 60;
+    el.textContent = m + ':' + String(s).padStart(2, '0');
+  }
+
+  async function handleVoiceSubmit() {
+    const name = document.getElementById('voiceName').value.trim();
+    if (!name) { showToast('נא לכתוב את שמכם'); return; }
+    if (!recordedBlob) { showToast('לא הוקלטה הודעה'); return; }
+
+    const btn = document.getElementById('voiceSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'מעלה...';
+
+    const file = new File([recordedBlob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' });
+    const mediaUrl = await DB.uploadMedia(file);
+
+    if (!mediaUrl) {
+      showToast('שגיאה בהעלאה, נסו שנית');
+      btn.disabled = false;
+      btn.textContent = '\u{1F499} שלחו';
+      return;
+    }
+
+    const item = {
+      type: 'audio',
+      author: name,
+      text: null,
+      media_url: mediaUrl,
+      video_url: null,
+      link_data: null,
+    };
+
+    const ok = await DB.publishDirect(item);
+    btn.disabled = false;
+    btn.textContent = '\u{1F499} שלחו';
+
+    if (ok) {
+      closeVoiceModal();
+      showToast('תודה! ההקלטה פורסמה \u{1F499}');
+      Wall.loadMemories();
+      updateAdminDot();
+    } else {
+      showToast('שגיאה בשליחה');
     }
   }
 
@@ -215,7 +416,6 @@ const Submit = (() => {
     btn.disabled = true;
     btn.textContent = 'שולח...';
 
-    // Auto detect type from link
     let type = 'story';
     if (link) {
       const l = link.toLowerCase();
@@ -237,14 +437,14 @@ const Submit = (() => {
         : null,
     };
 
-    const ok = await DB.submitPending(item);
+    const ok = await DB.publishDirect(item);
     btn.disabled = false;
-    btn.textContent = '\u{1F499} שלחו לאישור';
+    btn.textContent = '\u{1F499} שלחו';
 
     if (ok) {
       closeStoryModal();
-      showToast('תודה! ממתין לאישור \u{1F499}');
-      updateAdminDot();
+      showToast('תודה! הזיכרון פורסם \u{1F499}');
+      Wall.loadMemories();
     } else {
       showToast('שגיאה בשליחה');
     }

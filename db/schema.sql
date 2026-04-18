@@ -52,9 +52,10 @@ CREATE TABLE likes (
 
 -- ═══ Row Level Security ═══
 
--- memories: everyone reads, no direct writes
+-- memories: everyone reads and inserts
 ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_read_memories" ON memories FOR SELECT USING (true);
+CREATE POLICY "anyone_insert_memories" ON memories FOR INSERT WITH CHECK (true);
 
 -- pending: everyone inserts, no one reads (except via service key)
 ALTER TABLE pending ENABLE ROW LEVEL SECURITY;
