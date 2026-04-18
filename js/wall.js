@@ -66,12 +66,6 @@ const Wall = (() => {
       });
     }
 
-    // Candle
-    const candle = document.getElementById('mainCandle');
-    if (candle) {
-      candle.addEventListener('click', () => lightCandle(candle));
-    }
-
     // Lightbox close
     const lbClose = document.getElementById('lightboxClose');
     const lb = document.getElementById('lightbox');
@@ -131,54 +125,51 @@ const Wall = (() => {
     grid.innerHTML = filtered.map((m, i) => buildTile(m, i)).join('');
   }
 
-  // ── Build tile ──
+  // ── Build tile (tiny square) ──
   function buildTile(memory, index) {
     const m = memory;
     const meta = TYPE_META[m.type] || { emoji: '\u{1F499}', name: m.type };
-    const delay = Math.min(index * 0.04, 2); // stagger max 2s
-    const sizeClass = getSizeClass(m);
+    const delay = Math.min(index * 0.03, 1.5);
+    const sz = getSizeClass(m);
     const likeCount = likeCounts[m.id] || 0;
+    const preview = m.text ? truncate(m.text, 30) : '';
+    const hoverPreview = m.text ? truncate(m.text, 80) : '';
 
-    // Photo tile with thumbnail
+    // Photo tile — show thumbnail
     if (m.type === 'photo' && m.media_url) {
-      return `<div class="tile ${sizeClass}" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0" aria-label="${esc(m.author)} — תמונה">
-        <img class="tile-thumb" src="${esc(m.media_url)}" alt="${esc(m.text || 'תמונה של אסי')}" loading="lazy" onerror="this.style.display='none'">
-        <div class="tile-overlay">
+      return `<div class="tile ${sz}" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0">
+        <img class="tile-thumb" src="${esc(m.media_url)}" alt="${esc(m.text || '')}" loading="lazy" onerror="this.style.display='none'">
+        <div class="tile-hover-info">
           <span class="tile-label">${esc(m.author)}</span>
-          ${m.text ? `<span class="tile-author">${truncate(m.text, 40)}</span>` : ''}
+          ${m.text ? `<span class="tile-sub">${esc(truncate(m.text, 60))}</span>` : ''}
         </div>
         ${likeCount ? `<span class="tile-likes">\u2764 ${likeCount}</span>` : ''}
       </div>`;
     }
 
-    // Social tile
-    if (m.type === 'social') {
-      const firstLink = m.link_data && m.link_data[0];
-      const icon = firstLink && firstLink.icon === 'ig' ? '\u{1F4F7}' : '\u{1F4D8}';
-      return `<div class="tile ${sizeClass}" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0" aria-label="${esc(m.author)}">
-        <span class="tile-icon">${icon}</span>
-        <span class="tile-label">${esc(m.author)}</span>
-        ${firstLink ? `<span class="tile-author">${esc(firstLink.label)}</span>` : ''}
-      </div>`;
+    // All other tiles — icon + label, hover reveals more
+    const firstLink = m.link_data && m.link_data[0];
+    let icon = meta.emoji;
+    if (m.type === 'social' && firstLink) {
+      icon = firstLink.icon === 'ig' ? '\u{1F4F7}' : '\u{1F4D8}';
     }
 
-    // Default tile (story, video, audio)
-    const preview = m.text ? truncate(m.text, 50) : '';
-    return `<div class="tile ${sizeClass}" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0" aria-label="${esc(m.author)} — ${meta.name}">
-      <span class="tile-icon">${meta.emoji}</span>
+    return `<div class="tile ${sz}" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0">
+      <span class="tile-icon">${icon}</span>
       <span class="tile-label">${esc(m.author)}</span>
-      ${preview ? `<span class="tile-author">${esc(preview)}</span>` : ''}
+      <div class="tile-hover-info">
+        <span class="tile-label">${esc(m.author)}</span>
+        <span class="tile-sub">${esc(hoverPreview || (firstLink ? firstLink.label : meta.name))}</span>
+      </div>
       ${likeCount ? `<span class="tile-likes">\u2764 ${likeCount}</span>` : ''}
     </div>`;
   }
 
   function getSizeClass(m) {
-    if (m.size_hint === 'large') return 'size-large';
-    if (m.size_hint === 'wide') return 'size-wide';
-    if (m.size_hint === 'tall') return 'size-tall';
-    // Auto-size based on content
-    if (m.type === 'photo' && m.pinned) return 'size-large';
-    if (m.type === 'story' && m.text && m.text.length > 500) return 'size-tall';
+    if (m.size_hint === 'large') return 'sz-lg';
+    if (m.size_hint === 'wide') return 'sz-w';
+    if (m.size_hint === 'tall') return 'sz-t';
+    if (m.type === 'photo' && m.pinned) return 'sz-lg';
     return '';
   }
 
@@ -321,17 +312,6 @@ const Wall = (() => {
       openLightbox(id);
       showToast('תגובה נוספה! \u{1F499}');
     }
-  }
-
-  // ── Candle ──
-  function lightCandle(el) {
-    el.style.filter = 'drop-shadow(0 0 24px rgba(255,220,50,1))';
-    el.style.fontSize = '4rem';
-    showToast('נר הודלק לזכרו של אסי \u{1F56F}\uFE0F');
-    setTimeout(() => {
-      el.style.fontSize = '3.5rem';
-      el.style.filter = '';
-    }, 3000);
   }
 
   // ── Utilities ──

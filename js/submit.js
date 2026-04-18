@@ -20,11 +20,12 @@ const Submit = (() => {
   }
 
   function bindEvents() {
-    // ── Quick file upload (big button) ──
+    // ── Quick file upload (big button) — supports multiple ──
     const quickInput = document.getElementById('quickFileInput');
     if (quickInput) {
       quickInput.addEventListener('change', (e) => {
         if (e.target.files.length) {
+          // Take first file (we upload one at a time for simplicity)
           selectedFile = e.target.files[0];
           openQuickName();
         }
