@@ -257,6 +257,7 @@ const Wall = (() => {
           <button class="icon-btn comment-toggle-btn" data-id="${esc(id)}">
             \u{1F4AC} ${comments.length ? comments.length + ' תגובות' : 'הוסיפו תגובה'}
           </button>
+          ${isAdmin() ? `<button class="lb-delete-btn" data-id="${esc(id)}">\u{1F5D1} מחק</button>` : ''}
         </div>
       </div>
       <div class="lb-comments" id="lb-comments-${esc(id)}">
@@ -291,6 +292,12 @@ const Wall = (() => {
       commentInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleComment(id);
       });
+    }
+
+    // Admin delete
+    const deleteBtn = content.querySelector('.lb-delete-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => handleDelete(id));
     }
 
     lb.classList.add('open');
@@ -336,6 +343,24 @@ const Wall = (() => {
       // Re-render lightbox
       openLightbox(id);
       showToast('תגובה נוספה! \u{1F499}');
+    }
+  }
+
+  // ── Admin ──
+  function isAdmin() {
+    return localStorage.getItem('asaf_admin') === 'true';
+  }
+
+  async function handleDelete(id) {
+    if (!isAdmin()) return;
+    if (!confirm('למחוק את הזיכרון הזה?')) return;
+    const ok = await DB.deleteMemory(id);
+    if (ok) {
+      closeLightbox();
+      showToast('הזיכרון נמחק');
+      loadMemories();
+    } else {
+      showToast('שגיאה במחיקה');
     }
   }
 

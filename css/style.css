@@ -289,6 +289,38 @@ body {
 .voice-preview { width: 100%; text-align: center; }
 .voice-preview audio { border-radius: 8px; }
 
+/* ═══ UPLOAD PROGRESS ═══ */
+.upload-progress {
+  margin: 0.8rem 0;
+  text-align: center;
+}
+.upload-progress-bar {
+  height: 4px;
+  background: var(--gold);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+  margin-bottom: 0.4rem;
+}
+.upload-progress-text {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ═══ ADMIN DELETE ═══ */
+.lb-delete-btn {
+  background: rgba(200,60,60,0.12);
+  border: 1px solid rgba(200,60,60,0.3);
+  color: #d44;
+  border-radius: 7px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  margin-right: auto;
+}
+.lb-delete-btn:hover { background: rgba(200,60,60,0.25); }
+
 /* ═══ MAIN ═══ */
 .main-wrap {
   max-width: 1400px;

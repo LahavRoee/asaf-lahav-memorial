@@ -1,14 +1,13 @@
 'use strict';
 
 // ═══════════════════════════════════════════
-// Submit — Ultra-simple 2-click upload
-// 1. Click big button → pick photo/video
-// 2. Type name → send
-// Also: story modal, voice recording, paste
+// Submit — Upload flow
+// Supports multiple files at once
+// Also: story/link modal, voice recording, paste
 // ═══════════════════════════════════════════
 
 const Submit = (() => {
-  let selectedFile = null;
+  let selectedFiles = []; // array of files
 
   // Voice recording state
   let mediaRecorder = null;
@@ -17,20 +16,14 @@ const Submit = (() => {
   let recordingSeconds = 0;
   let recordedBlob = null;
 
-  function init() {
-    bindEvents();
-  }
-
   const MAX_FILE_MB = 50;
   const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
 
-  // Track uploaded file hashes to detect duplicates
-  let uploadedHashes = new Set();
+  // Track uploaded file names+sizes to detect duplicates (lightweight, no hash)
+  let uploadedFingerprints = new Set();
 
-  async function fileHash(file) {
-    const buffer = await file.arrayBuffer();
-    const hash = await crypto.subtle.digest('SHA-256', buffer);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  function fileFP(file) {
+    return file.name + '|' + file.size + '|' + file.lastModified;
   }
 
   function validateFile(file) {
@@ -41,27 +34,33 @@ const Submit = (() => {
     return true;
   }
 
+  function init() {
+    bindEvents();
+  }
+
   function bindEvents() {
-    // ── Quick file upload (big button) ──
+    // ── Quick file upload (big button) — supports multiple ──
     const quickInput = document.getElementById('quickFileInput');
     if (quickInput) {
-      quickInput.addEventListener('change', async (e) => {
-        if (e.target.files.length) {
-          const file = e.target.files[0];
-          if (!validateFile(file)) { quickInput.value = ''; return; }
+      quickInput.addEventListener('change', (e) => {
+        if (!e.target.files.length) return;
+        const files = Array.from(e.target.files);
 
-          // Duplicate check
-          const hash = await fileHash(file);
-          if (uploadedHashes.has(hash)) {
-            showToast('הקובץ הזה כבר הועלה לאתר');
-            quickInput.value = '';
-            return;
-          }
-
-          selectedFile = file;
-          selectedFile._hash = hash;
-          openQuickName();
+        // Validate all files
+        const valid = [];
+        let skippedSize = 0;
+        let skippedDup = 0;
+        for (const f of files) {
+          if (f.size > MAX_FILE_BYTES) { skippedSize++; continue; }
+          if (uploadedFingerprints.has(fileFP(f))) { skippedDup++; continue; }
+          valid.push(f);
         }
+        if (skippedSize) showToast(`${skippedSize} קבצים גדולים מדי (מקס׳ ${MAX_FILE_MB}MB)`);
+        if (skippedDup) showToast(`${skippedDup} קבצים כבר הועלו`);
+        if (!valid.length) { quickInput.value = ''; return; }
+
+        selectedFiles = valid;
+        openQuickName();
       });
     }
 
@@ -129,32 +128,49 @@ const Submit = (() => {
     if (adminBtn) adminBtn.addEventListener('click', openAdmin);
   }
 
-  // ═══ QUICK UPLOAD FLOW (2 clicks) ═══
+  // ═══ QUICK UPLOAD FLOW (supports multiple files) ═══
 
   function openQuickName() {
     const preview = document.getElementById('quickPreview');
-    if (preview && selectedFile) {
-      const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
-      const isImage = selectedFile.type.startsWith('image/');
-      const isVideo = selectedFile.type.startsWith('video/');
-      const typeLabel = isImage ? 'תמונה' : isVideo ? 'סרטון' : 'קובץ';
-      let thumbHtml = '';
-
-      if (isImage) {
-        thumbHtml = `<img src="${URL.createObjectURL(selectedFile)}" alt="preview">`;
-      } else if (isVideo) {
-        thumbHtml = `<video src="${URL.createObjectURL(selectedFile)}" muted></video>`;
+    if (preview && selectedFiles.length) {
+      if (selectedFiles.length === 1) {
+        const f = selectedFiles[0];
+        const sizeMB = (f.size / (1024 * 1024)).toFixed(1);
+        const isImage = f.type.startsWith('image/');
+        const isVideo = f.type.startsWith('video/');
+        const typeLabel = isImage ? 'תמונה' : isVideo ? 'סרטון' : 'קובץ';
+        let thumbHtml = '';
+        if (isImage) {
+          thumbHtml = `<img src="${URL.createObjectURL(f)}" alt="preview" style="max-height:120px;border-radius:8px;object-fit:cover">`;
+        } else if (isVideo) {
+          thumbHtml = `<video src="${URL.createObjectURL(f)}" muted style="max-height:120px;border-radius:8px"></video>`;
+        } else {
+          thumbHtml = `<span style="font-size:2rem">\u{1F4CE}</span>`;
+        }
+        preview.innerHTML = `<div style="display:flex;align-items:center;gap:0.8rem">
+          ${thumbHtml}
+          <div>
+            <div style="font-size:0.85rem;color:var(--text)">${Wall.esc(f.name)}</div>
+            <div style="font-size:0.75rem;color:var(--muted)">${sizeMB} MB &middot; ${typeLabel}</div>
+          </div>
+        </div>`;
       } else {
-        thumbHtml = `<span style="font-size:2rem">\u{1F4CE}</span>`;
+        // Multiple files — show grid of thumbnails
+        const thumbs = selectedFiles.slice(0, 12).map(f => {
+          if (f.type.startsWith('image/')) {
+            return `<img src="${URL.createObjectURL(f)}" alt="" style="width:60px;height:60px;object-fit:cover;border-radius:6px">`;
+          } else if (f.type.startsWith('video/')) {
+            return `<div style="width:60px;height:60px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">\u{1F3AC}</div>`;
+          }
+          return `<div style="width:60px;height:60px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">\u{1F4CE}</div>`;
+        }).join('');
+        const extra = selectedFiles.length > 12 ? `<div style="font-size:0.8rem;color:var(--muted)">+${selectedFiles.length - 12} נוספים</div>` : '';
+        preview.innerHTML = `<div>
+          <div style="font-size:0.9rem;font-weight:600;color:var(--gold-light);margin-bottom:0.5rem">${selectedFiles.length} קבצים נבחרו</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${thumbs}</div>
+          ${extra}
+        </div>`;
       }
-
-      preview.innerHTML = `
-        ${thumbHtml}
-        <div class="file-preview-info">
-          <div class="file-preview-name">${Wall.esc(selectedFile.name)}</div>
-          <div class="file-preview-size">${sizeMB} MB &middot; ${typeLabel}</div>
-        </div>
-      `;
     }
 
     document.getElementById('quickNameBackdrop').classList.add('open');
@@ -168,9 +184,11 @@ const Submit = (() => {
   function closeQuickName() {
     document.getElementById('quickNameBackdrop').classList.remove('open');
     document.body.style.overflow = '';
-    selectedFile = null;
+    selectedFiles = [];
     document.getElementById('quickName').value = '';
     document.getElementById('quickCaption').value = '';
+    const progress = document.getElementById('uploadProgress');
+    if (progress) progress.style.display = 'none';
     const quickInput = document.getElementById('quickFileInput');
     if (quickInput) quickInput.value = '';
   }
@@ -178,48 +196,72 @@ const Submit = (() => {
   async function handleQuickSubmit() {
     const name = document.getElementById('quickName').value.trim();
     if (!name) { showToast('נא לכתוב את שמכם'); return; }
-    if (!selectedFile) { showToast('לא נבחר קובץ'); return; }
+    if (!selectedFiles.length) { showToast('לא נבחרו קבצים'); return; }
 
     const caption = document.getElementById('quickCaption').value.trim();
     const btn = document.getElementById('quickSubmitBtn');
-    btn.disabled = true;
-    btn.textContent = 'מעלה...';
+    const progressEl = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
 
-    const mediaUrl = await DB.uploadMedia(selectedFile);
-    if (!mediaUrl) {
-      showToast('שגיאה בהעלאה, נסו שנית');
-      btn.disabled = false;
-      btn.textContent = '\u{1F499} שלחו';
-      return;
+    btn.disabled = true;
+    if (progressEl) progressEl.style.display = 'block';
+
+    const total = selectedFiles.length;
+    let uploaded = 0;
+    let failed = 0;
+
+    for (const file of selectedFiles) {
+      if (progressText) progressText.textContent = `מעלה ${uploaded + 1} מתוך ${total}...`;
+      if (progressBar) progressBar.style.width = ((uploaded / total) * 100) + '%';
+
+      try {
+        const mediaUrl = await DB.uploadMedia(file);
+        if (!mediaUrl) { failed++; continue; }
+
+        const isVideo = file.type.startsWith('video/');
+        const item = {
+          type: isVideo ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'photo',
+          author: name,
+          text: (total === 1 && caption) ? caption : null,
+          media_url: isVideo ? null : mediaUrl,
+          video_url: isVideo ? mediaUrl : null,
+          link_data: null,
+        };
+
+        const ok = await DB.publishDirect(item);
+        if (ok) {
+          uploadedFingerprints.add(fileFP(file));
+          uploaded++;
+        } else {
+          failed++;
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        failed++;
+      }
+
+      if (progressBar) progressBar.style.width = ((uploaded / total) * 100) + '%';
     }
 
-    const isVideo = selectedFile.type.startsWith('video/');
-    const item = {
-      type: isVideo ? 'video' : selectedFile.type.startsWith('audio/') ? 'audio' : 'photo',
-      author: name,
-      text: caption || null,
-      media_url: isVideo ? null : mediaUrl,
-      video_url: isVideo ? mediaUrl : null,
-      link_data: null,
-    };
-
-    const ok = await DB.publishDirect(item);
     btn.disabled = false;
-    btn.textContent = '\u{1F499} שלחו';
+    btn.textContent = 'שלחו';
 
-    if (ok) {
-      if (selectedFile && selectedFile._hash) uploadedHashes.add(selectedFile._hash);
+    if (uploaded > 0) {
       closeQuickName();
-      showToast('תודה! הזיכרון פורסם \u{1F499}');
+      const msg = total === 1
+        ? 'תודה! הזיכרון פורסם \u{1F499}'
+        : `${uploaded} זיכרונות פורסמו!${failed ? ' (' + failed + ' נכשלו)' : ''} \u{1F499}`;
+      showToast(msg);
       Wall.loadMemories();
     } else {
-      showToast('שגיאה בשליחה');
+      showToast('שגיאה בהעלאה, נסו שנית');
     }
   }
 
   // ═══ PASTE (Ctrl+V anywhere) ═══
 
-  async function handlePaste(e) {
+  function handlePaste(e) {
     const items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
 
@@ -231,13 +273,12 @@ const Submit = (() => {
         if (file) {
           if (!validateFile(file)) return;
           const ext = item.type.split('/')[1] || 'png';
-          selectedFile = new File([file], 'pasted.' + ext, { type: file.type });
-          const hash = await fileHash(selectedFile);
-          if (uploadedHashes.has(hash)) {
+          const pasted = new File([file], 'pasted.' + ext, { type: file.type });
+          if (uploadedFingerprints.has(fileFP(pasted))) {
             showToast('הקובץ הזה כבר הועלה לאתר');
             return;
           }
-          selectedFile._hash = hash;
+          selectedFiles = [pasted];
           openQuickName();
         }
         return;
@@ -307,18 +348,15 @@ const Submit = (() => {
 
       mediaRecorder.start();
 
-      // UI: show recording state
       document.getElementById('voiceStartBtn').style.display = 'none';
       document.getElementById('voiceRecordingState').style.display = '';
       document.getElementById('voicePreview').style.display = 'none';
 
-      // Timer
       recordingSeconds = 0;
       updateTimerDisplay();
       recordingTimer = setInterval(() => {
         recordingSeconds++;
         updateTimerDisplay();
-        // Auto-stop at 5 minutes
         if (recordingSeconds >= 300) stopRecording();
       }, 1000);
 
@@ -383,7 +421,6 @@ const Submit = (() => {
       closeVoiceModal();
       showToast('תודה! ההקלטה פורסמה \u{1F499}');
       Wall.loadMemories();
-      updateAdminDot();
     } else {
       showToast('שגיאה בשליחה');
     }
@@ -456,19 +493,12 @@ const Submit = (() => {
     const pass = prompt('סיסמת ניהול:');
     if (!pass) return;
     if (pass !== 'asi2022') { showToast('סיסמה שגויה'); return; }
-    window.location.href = 'admin.html';
+    localStorage.setItem('asaf_admin', 'true');
+    showToast('מצב מנהל הופעל — ניתן למחוק זיכרונות');
+    Wall.loadMemories();
   }
 
-  async function updateAdminDot() {
-    const btn = document.getElementById('adminToggle');
-    if (!btn) return;
-    const pending = await DB.fetchPending();
-    btn.innerHTML = pending.length
-      ? `\u2726 ניהול <span class="pdot"></span>${pending.length}`
-      : '\u2726 ניהול';
-  }
-
-  return { init, open: openStoryModal, close: closeStoryModal, updateAdminDot };
+  return { init, open: openStoryModal, close: closeStoryModal };
 })();
 
 document.addEventListener('DOMContentLoaded', () => Submit.init());
