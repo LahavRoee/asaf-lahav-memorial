@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אסף יוסף להב — לזכרו</title>
+    <meta name="description" content="אתר הנצחה לזכרו של אסף יוסף להב ז״ל (1982-2022). שתפו זיכרונות, תמונות, סיפורים וסרטונים.">
+    <meta property="og:title" content="אסף יוסף להב — לזכרו">
+    <meta property="og:description" content="קיר זיכרונות לאסי. שתפו תמונות, סיפורים, הקלטות וסרטונים.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="he_IL">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#0c0c17">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700;900&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Stars background -->
+<div class="stars" id="stars"></div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+    <div class="candle-area">
+        <div class="candle-emoji" id="mainCandle" title="לחצו להדלקת נר">&#x1F56F;&#xFE0F;</div>
+        <div class="candle-label">לחצו להדלקת נר לזכרו</div>
+    </div>
+
+    <h1 class="hero-name">אסף יוסף להב</h1>
+    <p class="hero-dates">י״ח באייר תשמ״ב — י״ג בתשרי תשפ״ג&nbsp;&nbsp;|&nbsp;&nbsp;19.05.1982 — 11.10.2022</p>
+
+    <p class="hero-poem">
+        אַסִי, עָלֶיךָ נִכְתַּב, אִישׁ שֶׁל אֲנָשִׁים.<br>
+        מִלֵּאתָ אֶת כָּל הַתַּפְקִידִים הָאֶפְשָׁרִיִּים, אַבָּא וּבֶן-זוּג, בֵּן וְאָח,<br>
+        נֶכֶד וְדוֹד, בֶּן-דּוֹד וְאַחְיָן, חָבֵר וַאֲפִלּוּ שָׁכֵן טוֹב<br>
+        וְהַכֹּל עַל מָלֵא, אֵין אֶצְלְךָ בְּעֵרֶךְ, אֵין כִּמְעַט, שָׁחֹר אוֹ לָבָן.<br><br>
+        לָעַד תְּלַוֶּה אוֹתָנוּ בְּכָל שִׁיר שֶׁנִּשְׁמַע,<br>
+        בַּדֶּרֶךְ לָעֲבוֹדָה, בְּרִגְעֵי עֶצֶב וְשִׂמְחָה.
+    </p>
+
+    <div class="scroll-down" id="scrollDown">&#8595;</div>
+</section>
+
+<!-- MAIN -->
+<main class="main-wrap" id="main">
+
+    <!-- Add Memory CTA -->
+    <div class="add-cta" id="addCta">
+        <button class="add-cta-btn" id="openSubmitBtn">
+            <span class="add-cta-icon">&#x1F499;</span>
+            <span class="add-cta-text">שתפו זיכרון מאסי</span>
+            <span class="add-cta-sub">תמונה, סיפור, סרטון, הקלטה או קישור</span>
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+        <button class="tab active" data-filter="all">&#x1F56F;&#xFE0F; הכל</button>
+        <button class="tab" data-filter="story">&#x1F499; זיכרונות</button>
+        <button class="tab" data-filter="photo">&#x1F4F8; תמונות</button>
+        <button class="tab" data-filter="video">&#x1F3AC; וידאו</button>
+        <button class="tab" data-filter="audio">&#x1F399;&#xFE0F; קולות</button>
+        <button class="tab" data-filter="social">&#x1F4D8; רשתות</button>
+    </div>
+
+    <!-- Tile count -->
+    <div class="tile-count" id="tileCount"></div>
+
+    <!-- Grid -->
+    <div class="grid" id="mainGrid">
+        <div class="loading">טוען זיכרונות...</div>
+    </div>
+
+</main>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-backdrop" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <div class="lightbox-content" id="lightboxContent"></div>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="backdrop" id="submitBackdrop">
+    <div class="modal" id="submitModal">
+        <h2>&#x1F499; שתפו זיכרון מאסי</h2>
+
+        <div class="form-group">
+            <label>סוג התוכן</label>
+            <div class="type-grid" id="typeGrid">
+                <button class="type-btn sel" data-type="story">
+                    <span class="big">&#x1F4AC;</span>סיפור / זיכרון
+                </button>
+                <button class="type-btn" data-type="photo">
+                    <span class="big">&#x1F4F8;</span>תמונה
+                </button>
+                <button class="type-btn" data-type="video">
+                    <span class="big">&#x1F3AC;</span>וידאו
+                </button>
+                <button class="type-btn" data-type="audio">
+                    <span class="big">&#x1F399;&#xFE0F;</span>הקלטה קולית
+                </button>
+                <button class="type-btn" data-type="social">
+                    <span class="big">&#x1F4D8;</span>פוסט / קישור
+                </button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>שמכם (יופיע לצד הזיכרון)</label>
+            <input type="text" id="subName" placeholder="שם מלא" />
+        </div>
+
+        <div class="form-group" id="textGroup">
+            <label>הסיפור / הזיכרון שלכם</label>
+            <textarea id="subText" placeholder="ספרו זיכרון, רגע, משפט שמרגש..."></textarea>
+        </div>
+
+        <div class="form-group" id="linkGroup" style="display:none">
+            <label>קישור (URL)</label>
+            <input type="url" id="subLink" placeholder="https://..." />
+            <div class="hint" id="linkHint">קישור לתמונה / YouTube / הקלטה / פוסט</div>
+        </div>
+
+        <div class="form-group" id="fileGroup" style="display:none">
+            <label>או העלו קובץ</label>
+            <div class="file-drop" id="fileDrop">
+                <span class="file-drop-icon">&#x1F4E4;</span>
+                <span class="file-drop-text">גררו קובץ לכאן או לחצו לבחירה</span>
+                <input type="file" id="fileInput" accept="image/*,audio/*" />
+            </div>
+            <div class="file-preview" id="filePreview" style="display:none"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-main" id="submitBtn">שלחו לאישור &#x1F499;</button>
+            <button class="btn-sec" id="cancelSubmitBtn">ביטול</button>
+        </div>
+
+        <p class="modal-note">
+            כל תוכן יועבר לאישור לפני פרסום. תודה שזוכרים.
+        </p>
+    </div>
+</div>
+
+<!-- Admin toggle -->
+<button class="admin-link" id="adminToggle">&#x2726; ניהול</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Scripts -->
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/wall.js"></script>
+<script src="js/submit.js"></script>
+
+</body>
+</html>

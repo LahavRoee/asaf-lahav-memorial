@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול — אסף יוסף להב</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700;900&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem 4rem;
+            min-height: 100vh;
+        }
+        .admin-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .admin-title {
+            font-family: 'Frank Ruhl Libre', serif;
+            color: var(--gold-light);
+            font-size: 1.4rem;
+        }
+        .admin-back {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .admin-back:hover { color: var(--gold-light); }
+
+        /* Login gate */
+        .login-gate {
+            text-align: center;
+            padding: 6rem 1rem;
+        }
+        .login-gate h2 {
+            font-family: 'Frank Ruhl Libre', serif;
+            color: var(--gold-light);
+            margin-bottom: 1.5rem;
+        }
+        .login-gate input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 0.65rem 1rem;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Assistant', sans-serif;
+            width: 220px;
+            text-align: center;
+            direction: ltr;
+        }
+        .login-gate input:focus { border-color: var(--gold); outline: none; }
+        .login-gate button {
+            display: block;
+            margin: 1rem auto 0;
+            background: var(--gold);
+            border: none;
+            border-radius: 9px;
+            padding: 0.65rem 2rem;
+            color: #0c0c17;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Pending card */
+        .pending-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .pending-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .pending-type {
+            background: var(--gold-dim);
+            color: var(--gold);
+            border-radius: 100px;
+            padding: 0.15rem 0.6rem;
+            font-size: 0.72rem;
+        }
+        .pending-author {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gold-light);
+        }
+        .pending-date {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .pending-text {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: var(--text);
+            white-space: pre-wrap;
+            margin-bottom: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .pending-media {
+            margin-bottom: 0.85rem;
+        }
+        .pending-media img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .pending-link {
+            font-size: 0.82rem;
+            color: var(--blue);
+            word-break: break-all;
+            margin-bottom: 0.85rem;
+            display: block;
+        }
+        .pending-actions {
+            display: flex;
+            gap: 0.6rem;
+        }
+        .btn-approve {
+            background: rgba(100,200,100,0.12);
+            border: 1px solid rgba(100,200,100,0.25);
+            color: #7ec97e;
+            border-radius: 7px;
+            padding: 0.45rem 1.2rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+        .btn-approve:hover { background: rgba(100,200,100,0.22); }
+        .btn-reject {
+            background: rgba(200,80,80,0.1);
+            border: 1px solid rgba(200,80,80,0.2);
+            color: #c97e7e;
+            border-radius: 7px;
+            padding: 0.45rem 1.2rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+        .btn-reject:hover { background: rgba(200,80,80,0.2); }
+
+        .empty-state {
+            text-align: center;
+            padding: 5rem 1rem;
+            color: var(--muted);
+        }
+        .empty-state .big { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+        /* Size selector */
+        .size-select {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+        .size-opt {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .size-opt:hover, .size-opt.sel {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrap" id="adminWrap">
+    <!-- Login gate (shown first) -->
+    <div class="login-gate" id="loginGate">
+        <h2>&#x1F512; כניסת מנהל</h2>
+        <input type="password" id="passInput" placeholder="סיסמה" autofocus />
+        <button id="loginBtn">כניסה</button>
+    </div>
+
+    <!-- Admin content (hidden until login) -->
+    <div id="adminContent" style="display:none">
+        <div class="admin-topbar">
+            <h1 class="admin-title">&#x2726; לוח ניהול — זיכרונות ממתינים</h1>
+            <a href="index.html" class="admin-back">&#x2190; חזרה לאתר</a>
+        </div>
+        <div id="pendingList"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>
