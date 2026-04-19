@@ -194,11 +194,10 @@ const Submit = (() => {
   }
 
   async function handleQuickSubmit() {
-    const name = document.getElementById('quickName').value.trim();
-    if (!name) { showToast('נא לכתוב את שמכם'); return; }
-    if (!selectedFiles.length) { showToast('לא נבחרו קבצים'); return; }
-
     const caption = document.getElementById('quickCaption').value.trim();
+    const name = document.getElementById('quickName').value.trim() || 'אנונימי';
+    if (!caption) { showToast('נא לכתוב כותרת או כמה מילים'); return; }
+    if (!selectedFiles.length) { showToast('לא נבחרו קבצים'); return; }
     const btn = document.getElementById('quickSubmitBtn');
     const progressEl = document.getElementById('uploadProgress');
     const progressBar = document.getElementById('uploadProgressBar');
@@ -223,7 +222,7 @@ const Submit = (() => {
         const item = {
           type: isVideo ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'photo',
           author: name,
-          text: (total === 1 && caption) ? caption : null,
+          text: caption || null,
           media_url: isVideo ? null : mediaUrl,
           video_url: isVideo ? mediaUrl : null,
           link_data: null,

@@ -172,6 +172,19 @@ const Wall = (() => {
       </div>`;
     }
 
+    // Video tile — show uploaded video preview (muted, no controls)
+    if (m.type === 'video' && m.video_url && isUploadedVideo(m.video_url)) {
+      return `<div class="tile ${sz} tile-video" data-id="${esc(m.id)}" data-type="${m.type}" style="animation-delay:${delay}s" role="button" tabindex="0">
+        <video class="tile-thumb" src="${esc(m.video_url)}#t=0.5" muted playsinline preload="metadata" loading="lazy" onerror="this.style.display='none'"></video>
+        <span class="tile-play-icon">\u25B6</span>
+        <div class="tile-hover-info">
+          <span class="tile-label">${esc(m.author)}</span>
+          ${m.text ? `<span class="tile-sub">${esc(truncate(m.text, 60))}</span>` : ''}
+        </div>
+        ${likeCount ? `<span class="tile-likes">\u2764 ${likeCount}</span>` : ''}
+      </div>`;
+    }
+
     // All other tiles — icon + label, hover reveals more
     const firstLink = m.link_data && m.link_data[0];
     let icon = meta.emoji;
@@ -219,6 +232,8 @@ const Wall = (() => {
       const ytId = extractYT(memory.video_url);
       if (ytId) {
         mediaHtml = `<iframe class="lb-yt-frame" src="https://www.youtube.com/embed/${ytId}" allowfullscreen loading="lazy"></iframe>`;
+      } else if (isUploadedVideo(memory.video_url)) {
+        mediaHtml = `<div class="lb-media"><video src="${esc(memory.video_url)}" controls playsinline style="width:100%;max-height:70vh;border-radius:8px;background:#000"></video></div>`;
       }
     } else if (memory.type === 'audio' && memory.media_url) {
       mediaHtml = `<div style="padding:1rem"><audio controls style="width:100%" src="${esc(memory.media_url)}"></audio></div>`;
@@ -383,6 +398,14 @@ const Wall = (() => {
     if (!url) return null;
     const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([A-Za-z0-9_-]{11})/);
     return m ? m[1] : null;
+  }
+
+  // Detect uploaded video files (Supabase Storage or direct file URLs)
+  function isUploadedVideo(url) {
+    if (!url) return false;
+    return /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url) ||
+           url.includes('supabase.co/storage/') ||
+           url.includes('/storage/v1/object/');
   }
 
   // ── Public ──
