@@ -42,13 +42,17 @@
     <div class="hero-upload">
         <label class="hero-upload-btn" tabindex="0">
             <span class="hero-upload-plus">+</span>
-            <span class="hero-upload-text">הוסיפו תמונה, סרטון או זיכרון</span>
-            <input type="file" id="quickFileInput" accept="image/*,video/*" multiple />
+            <span class="hero-upload-text">הוסיפו תמונה, סרטון או הקלטה</span>
+            <input type="file" id="quickFileInput" accept="image/*,video/*,audio/*,.opus,.m4a,.ogg,.mp3,.aac,.wav" multiple />
         </label>
         <div class="hero-upload-row">
             <button class="hero-sub-btn" id="openSubmitBtn">&#x270D;&#xFE0F; כתבו סיפור</button>
-            <button class="hero-sub-btn hero-voice-btn" id="voiceRecordBtn">
-                &#x1F3A4; הקליטו הודעה קולית
+            <label class="hero-sub-btn hero-voice-btn" tabindex="0" title="העלו קובץ הקלטה מהפלאפון או מהוואטסאפ">
+                &#x1F3A4; העלו הודעה קולית
+                <input type="file" id="voiceFileInput" accept="audio/*,.opus,.m4a,.ogg,.mp3,.aac,.wav" style="display:none" />
+            </label>
+            <button class="hero-sub-btn hero-voice-btn" id="voiceRecordBtn" title="הקליטו ישירות מהדפדפן">
+                &#x1F534; הקליטו עכשיו
             </button>
         </div>
     </div>

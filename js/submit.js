@@ -38,30 +38,48 @@ const Submit = (() => {
     bindEvents();
   }
 
+  // Detect audio even when MIME type is missing/wrong (WhatsApp .opus files)
+  function isAudioFile(f) {
+    if (f.type && f.type.startsWith('audio/')) return true;
+    return /\.(opus|m4a|ogg|mp3|aac|wav|3gp|amr)$/i.test(f.name);
+  }
+
+  function isVideoFile(f) {
+    if (f.type && f.type.startsWith('video/')) return true;
+    return /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(f.name);
+  }
+
+  function handleFileSelection(e, inputEl) {
+    if (!e.target.files.length) return;
+    const files = Array.from(e.target.files);
+
+    const valid = [];
+    let skippedSize = 0;
+    let skippedDup = 0;
+    for (const f of files) {
+      if (f.size > MAX_FILE_BYTES) { skippedSize++; continue; }
+      if (uploadedFingerprints.has(fileFP(f))) { skippedDup++; continue; }
+      valid.push(f);
+    }
+    if (skippedSize) showToast(`${skippedSize} קבצים גדולים מדי (מקס׳ ${MAX_FILE_MB}MB)`);
+    if (skippedDup) showToast(`${skippedDup} קבצים כבר הועלו`);
+    if (!valid.length) { inputEl.value = ''; return; }
+
+    selectedFiles = valid;
+    openQuickName();
+  }
+
   function bindEvents() {
     // ── Quick file upload (big button) — supports multiple ──
     const quickInput = document.getElementById('quickFileInput');
     if (quickInput) {
-      quickInput.addEventListener('change', (e) => {
-        if (!e.target.files.length) return;
-        const files = Array.from(e.target.files);
+      quickInput.addEventListener('change', (e) => handleFileSelection(e, quickInput));
+    }
 
-        // Validate all files
-        const valid = [];
-        let skippedSize = 0;
-        let skippedDup = 0;
-        for (const f of files) {
-          if (f.size > MAX_FILE_BYTES) { skippedSize++; continue; }
-          if (uploadedFingerprints.has(fileFP(f))) { skippedDup++; continue; }
-          valid.push(f);
-        }
-        if (skippedSize) showToast(`${skippedSize} קבצים גדולים מדי (מקס׳ ${MAX_FILE_MB}MB)`);
-        if (skippedDup) showToast(`${skippedDup} קבצים כבר הועלו`);
-        if (!valid.length) { quickInput.value = ''; return; }
-
-        selectedFiles = valid;
-        openQuickName();
-      });
+    // ── Voice file upload (for WhatsApp voice messages / existing audio) ──
+    const voiceInput = document.getElementById('voiceFileInput');
+    if (voiceInput) {
+      voiceInput.addEventListener('change', (e) => handleFileSelection(e, voiceInput));
     }
 
     // ── Quick name modal ──
@@ -136,14 +154,20 @@ const Submit = (() => {
       if (selectedFiles.length === 1) {
         const f = selectedFiles[0];
         const sizeMB = (f.size / (1024 * 1024)).toFixed(1);
-        const isImage = f.type.startsWith('image/');
-        const isVideo = f.type.startsWith('video/');
-        const typeLabel = isImage ? 'תמונה' : isVideo ? 'סרטון' : 'קובץ';
+        const isImage = f.type && f.type.startsWith('image/');
+        const isVideo = isVideoFile(f);
+        const isAudio = isAudioFile(f);
+        const typeLabel = isImage ? 'תמונה' : isVideo ? 'סרטון' : isAudio ? 'הקלטה' : 'קובץ';
         let thumbHtml = '';
         if (isImage) {
           thumbHtml = `<img src="${URL.createObjectURL(f)}" alt="preview" style="max-height:120px;border-radius:8px;object-fit:cover">`;
         } else if (isVideo) {
           thumbHtml = `<video src="${URL.createObjectURL(f)}" muted style="max-height:120px;border-radius:8px"></video>`;
+        } else if (isAudio) {
+          thumbHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:0.4rem">
+            <span style="font-size:2.5rem">\u{1F399}\uFE0F</span>
+            <audio controls src="${URL.createObjectURL(f)}" style="width:220px;height:36px"></audio>
+          </div>`;
         } else {
           thumbHtml = `<span style="font-size:2rem">\u{1F4CE}</span>`;
         }
@@ -218,9 +242,11 @@ const Submit = (() => {
         const mediaUrl = await DB.uploadMedia(file);
         if (!mediaUrl) { failed++; continue; }
 
-        const isVideo = file.type.startsWith('video/');
+        const isVideo = isVideoFile(file);
+        const isAudio = isAudioFile(file);
+        const type = isVideo ? 'video' : isAudio ? 'audio' : 'photo';
         const item = {
-          type: isVideo ? 'video' : file.type.startsWith('audio/') ? 'audio' : 'photo',
+          type,
           author: name,
           text: caption || null,
           media_url: isVideo ? null : mediaUrl,
